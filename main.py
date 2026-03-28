@@ -1,7 +1,6 @@
 import asyncio
 import os
 import requests
-import json
 from datetime import datetime, timezone
 from browser_use import Agent, Browser, ChatGroq
 from dotenv import load_dotenv
@@ -97,7 +96,7 @@ def get_today_ipl_odds():
 
 async def run_betting_bot():
     # Using a high-performance but token-efficient model
-    llm = ChatGroq(model="llama-3.3-70b-versatile")
+    llm = ChatGroq(model="meta-llama/llama-4-scout-17b-16e-instruct")
 
     print("📊 Fetching today's IPL odds...")
     odds_summary = get_today_ipl_odds()
@@ -117,8 +116,8 @@ async def run_betting_bot():
 
     task = (
         f"Login to http://flask-env.eba-txvdvhqt.us-west-2.elasticbeanstalk.com/ (68467746 / '  '). "
-        f"Matches: {compact_summary}. For each: find under 'Up Next', click row, "
-        "select specified team, submit, screenshot. Repeat for all."
+        f"Matches: {compact_summary}. For each match: find them under 'Up Next', click row, "
+        "select specified team, submit, screenshot. Repeat."
     )
 
     browser = Browser(
