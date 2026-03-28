@@ -59,43 +59,70 @@ def get_today_ipl_odds():
     params = {
         "apiKey": ODDS_API_KEY,
         "regions": "uk",
-        "eventIds": ",".join(today_event_ids)
+        "eventIds": ",".join(today_event_ids),
+        "markets": "h2h"
     }
     try:
         odds_response = requests.get(odds_url, params=params)
         odds_response.raise_for_status()
-        return odds_response.json()
+        odds_data = odds_response.json()
+        
+        # 3. Parse Favorites Programmatically
+        summary = []
+        for match in odds_data:
+            home_team = match.get('home_team')
+            away_team = match.get('away_team')
+            
+            # Find the first bookmaker and its h2h market
+            favorite = None
+            min_price = float('inf')
+            
+            if match.get('bookmakers'):
+                # We'll just take the average or first available bookmaker's odds
+                bookmaker = match['bookmakers'][0]
+                markets = bookmaker.get('markets', [])
+                if markets:
+                    outcomes = markets[0].get('outcomes', [])
+                    for outcome in outcomes:
+                        if outcome['price'] < min_price:
+                            min_price = outcome['price']
+                            favorite = outcome['name']
+            
+            if favorite:
+                summary.append(f"Match: {home_team} vs {away_team} | Favorite to bet on: {favorite}")
+        
+        return "\n".join(summary) if summary else "NO_ODDS"
+        
     except Exception as e:
-        print(f"❌ Error fetching odds: {e}")
+        print(f"❌ Error fetching/parsing odds: {e}")
         return None
 
 async def run_betting_bot():
-    # Initialize the "Brain" (Gemini 3.1 Flash)
+    # Initialize the "Brain"
     llm = ChatGroq(model="meta-llama/llama-4-scout-17b-16e-instruct")
 
     print("📊 Fetching today's IPL odds...")
-    odds_data = get_today_ipl_odds()
+    odds_summary = get_today_ipl_odds()
 
-    if odds_data == "NO_MATCHES":
+    if odds_summary == "NO_MATCHES":
         send_discord_notification("ℹ️ **No IPL matches today.** Skipping betting.")
         return
-    elif odds_data is None:
+    elif odds_summary == "NO_ODDS":
+        send_discord_notification("⚠️ **Matches found but no odds available yet.**")
+        return
+    elif odds_summary is None:
         send_discord_notification("❌ **Failed to fetch odds!** Check API key or connection.")
         return
 
-    odds_json_str = json.dumps(odds_data, indent=2)
-
-    # The Task: Use the odds data and place the bets
+    # The Task: Use the pre-parsed summary
     task = (
-        f"Using the following JSON odds data for today's IPL matches:\n{odds_json_str}\n\n"
-        "1. Parse the JSON and determine the winner/favorite for each match (lower odds means favorite). "
-        "2. For each match, note the teams and the chosen favorite. "
-        "3. Go to http://flask-env.eba-txvdvhqt.us-west-2.elasticbeanstalk.com/, log in with "
+        f"Today's IPL Betting Summary:\n{odds_summary}\n\n"
+        "1. Go to http://flask-env.eba-txvdvhqt.us-west-2.elasticbeanstalk.com/, log in with "
         "Phone Number: 68467746 and Password: '  ' (2 spaces). "
         "Wait for the page to load. "
-        "4. For each match identified from the odds data: "
+        "2. For each match mentioned in the summary: "
         "   a. Find the match under 'Up Next' on the home page and click the row to go to the match page. "
-        "   b. Click on 'Choose team', select the favorite team you identified, submit the bet, and take a screenshot. "
+        "   b. Click on 'Choose team', select the EXACT favorite team specified in the summary, submit the bet, and take a screenshot. "
         "   c. Go back to the home page to handle the next match (if any). "
     )
 
