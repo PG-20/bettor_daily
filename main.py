@@ -73,12 +73,10 @@ def get_today_ipl_odds():
             home_team = match.get('home_team')
             away_team = match.get('away_team')
             
-            # Find the first bookmaker and its h2h market
             favorite = None
             min_price = float('inf')
             
             if match.get('bookmakers'):
-                # We'll just take the average or first available bookmaker's odds
                 bookmaker = match['bookmakers'][0]
                 markets = bookmaker.get('markets', [])
                 if markets:
@@ -98,8 +96,8 @@ def get_today_ipl_odds():
         return None
 
 async def run_betting_bot():
-    # Initialize the "Brain"
-    llm = ChatGroq(model="meta-llama/llama-4-scout-17b-16e-instruct")
+    # Using a high-performance but token-efficient model
+    llm = ChatGroq(model="llama-3.3-70b-versatile")
 
     print("📊 Fetching today's IPL odds...")
     odds_summary = get_today_ipl_odds()
@@ -114,16 +112,13 @@ async def run_betting_bot():
         send_discord_notification("❌ **Failed to fetch odds!** Check API key or connection.")
         return
 
-    # The Task: Use the pre-parsed summary
+    # Highly compressed task to save tokens
+    compact_summary = odds_summary.replace("Match: ", "").replace(" | Favorite to bet on: ", " -> ")
+
     task = (
-        f"Today's IPL Betting Summary:\n{odds_summary}\n\n"
-        "1. Go to http://flask-env.eba-txvdvhqt.us-west-2.elasticbeanstalk.com/, log in with "
-        "Phone Number: 68467746 and Password: '  ' (2 spaces). "
-        "Wait for the page to load. "
-        "2. For each match mentioned in the summary: "
-        "   a. Find the match under 'Up Next' on the home page and click the row to go to the match page. "
-        "   b. Click on 'Choose team', select the EXACT favorite team specified in the summary, submit the bet, and take a screenshot. "
-        "   c. Go back to the home page to handle the next match (if any). "
+        f"Login to http://flask-env.eba-txvdvhqt.us-west-2.elasticbeanstalk.com/ (68467746 / '  '). "
+        f"Matches: {compact_summary}. For each: find under 'Up Next', click row, "
+        "select specified team, submit, screenshot. Repeat for all."
     )
 
     browser = Browser(
@@ -136,7 +131,7 @@ async def run_betting_bot():
         print("🚀 Starting betting bot...")
         history = await agent.run()
 
-        # Save the last screenshot if available (regardless of success, for debugging)
+        # Save last screenshot
         screenshots = history.screenshots()
         screenshot_path = "bet_confirmation.png"
         has_screenshot = False
@@ -157,8 +152,7 @@ async def run_betting_bot():
                 file_path=screenshot_path if has_screenshot else None
             )
         else:
-            # If not successful, we treat it as a failure even if no exception was raised
-            error_msg = "❌ **Betting Bot Failed!**\n**Reason:** Agent did not mark the task as successful."
+            error_msg = "❌ **Betting Bot Failed!**\n**Reason:** Agent did not mark task as successful."
             print(error_msg)
             send_discord_notification(
                 error_msg,
