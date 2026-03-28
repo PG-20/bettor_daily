@@ -125,7 +125,9 @@ async def run_betting_bot():
         headless=True,
         window_size={'width': 1280, 'height': 1100}
     )
-    agent = Agent(task=task, llm=llm, browser=browser)
+    # Set use_vision=False to avoid sending images to the model (saves tokens + avoids limit errors)
+    # The browser will still take screenshots for our history/Discord notification.
+    agent = Agent(task=task, llm=llm, browser=browser, use_vision=False)
 
     try:
         print("🚀 Starting betting bot...")
