@@ -1,4 +1,4 @@
-name: Daily IPL Bet
+name: Daily Bet
 on:
   schedule:
     - cron: '0 10 * * *'  # Runs daily at 10:00 AM UTC
