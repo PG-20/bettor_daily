@@ -118,7 +118,7 @@ async def run_betting_bot():
         "Login to http://flask-env.eba-txvdvhqt.us-west-2.elasticbeanstalk.com/ using these exact credentials: "
         "Phone Number: 68467746 and Password: '  ' (two spaces). "
         f"Matches: {compact_summary}. For each: find under 'Up Next', click row, "
-        "select specified team, submit, screenshot. Repeat for all."
+        "select specified team, submit, screenshot, back home."
     )
 
 
