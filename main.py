@@ -115,10 +115,12 @@ async def run_betting_bot():
     compact_summary = odds_summary.replace("Match: ", "").replace(" | Favorite to bet on: ", " -> ")
 
     task = (
-        f"Login to http://flask-env.eba-txvdvhqt.us-west-2.elasticbeanstalk.com/ (68467746 / '  '). "
-        f"Matches: {compact_summary}. For each match: find them under 'Up Next', click row, "
-        "select specified team, submit, screenshot. Repeat."
+        "Login to http://flask-env.eba-txvdvhqt.us-west-2.elasticbeanstalk.com/ using these exact credentials: "
+        "Phone Number: 68467746 and Password: '  ' (two spaces). "
+        f"Matches: {compact_summary}. For each: find under 'Up Next', click row, "
+        "select specified team, submit, screenshot. Repeat for all."
     )
+
 
     browser = Browser(
         headless=True,
