@@ -1,6 +1,7 @@
 import asyncio
 import os
 import requests
+import json
 from datetime import datetime, timezone
 from browser_use import Agent, Browser, ChatGroq
 from dotenv import load_dotenv
@@ -95,8 +96,8 @@ def get_today_ipl_odds():
         return None
 
 async def run_betting_bot():
-    # Using a high-performance but token-efficient model
-    llm = ChatGroq(model="llama-3.3-70b-versatile")
+    # Reverting to the requested Meta model
+    llm = ChatGroq(model="meta-llama/llama-4-scout-17b-16e-instruct")
 
     print("📊 Fetching today's IPL odds...")
     odds_summary = get_today_ipl_odds()
@@ -120,36 +121,43 @@ async def run_betting_bot():
         "Login to http://flask-env.eba-txvdvhqt.us-west-2.elasticbeanstalk.com/ with "
         "Phone: 68467746 and Password: '  ' (2 spaces). "
         f"There are exactly {num_matches} match(es) to bet on today: {compact_summary}. "
-        "For each specific match listed: find it under 'Up Next', click the row, "
-        "select the team, submit, screenshot, and return Home. "
+        "For each match listed: find under 'Up Next', click the row, select team, and submit. "
+        "CRITICAL: After submitting EACH bet, take a screenshot of the confirmation page. "
+        "Then return Home to handle the next match (if any). "
         f"STOP immediately after completing these {num_matches} matches. Do NOT bet on future games."
     )
-
-
 
     browser = Browser(
         headless=True,
         window_size={'width': 1280, 'height': 1100}
     )
-    # Set use_vision=False to avoid sending images to the model (saves tokens + avoids limit errors)
-    # The browser will still take screenshots for our history/Discord notification.
+    # use_vision=False saves tokens, but we still capture screenshots in history
     agent = Agent(task=task, llm=llm, browser=browser, use_vision=False)
 
     try:
         print("🚀 Starting betting bot...")
         history = await agent.run()
 
-        # Save last screenshot
+        # Get all screenshots from history
         screenshots = history.screenshots()
         screenshot_path = "bet_confirmation.png"
         has_screenshot = False
 
         if screenshots:
             import base64
-            last_screenshot_base64 = screenshots[-1]
+            # We want the screenshot of the success page, not the final 'home' page.
+            # Usually, the second to last screenshot (if successful) is the confirmation.
+            # If there are multiple matches, we'll try to get the most recent confirmation.
+            target_index = -2 if len(screenshots) > 1 else -1
+            
+            # Additional logic: if the agent failed, the last screenshot is likely the error state.
+            if not history.is_successful():
+                target_index = -1
+
+            last_screenshot_base64 = screenshots[target_index]
             with open(screenshot_path, "wb") as f:
                 f.write(base64.b64decode(last_screenshot_base64))
-            print(f"📸 Last screenshot saved as {screenshot_path}")
+            print(f"📸 Screenshot saved as {screenshot_path} (Index: {target_index})")
             has_screenshot = True
 
         if history.is_successful():
