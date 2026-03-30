@@ -121,9 +121,7 @@ async def run_betting_bot():
         "Login to http://flask-env.eba-txvdvhqt.us-west-2.elasticbeanstalk.com/ with "
         "Phone: 68467746 and Password: '  ' (2 spaces). "
         f"There are exactly {num_matches} match(es) to bet on today: {compact_summary}. "
-        "For each match listed: find under 'Up Next', click the row, select team, and submit. "
-        "CRITICAL: After submitting EACH bet, take a screenshot of the confirmation page. "
-        "Then return Home to handle the next match (if any). "
+        "For each match mentioned: find under 'Up Next', click the row, select team, and submit. return home"
         f"STOP immediately after completing these {num_matches} matches. Do NOT bet on future games."
     )
 
