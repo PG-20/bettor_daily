@@ -96,7 +96,7 @@ def get_today_ipl_odds():
 
 async def run_betting_bot():
     # Using a high-performance but token-efficient model
-    llm = ChatGroq(model="meta-llama/llama-4-scout-17b-16e-instruct")
+    llm = ChatGroq(model="llama-3.3-70b-versatile")
 
     print("📊 Fetching today's IPL odds...")
     odds_summary = get_today_ipl_odds()
@@ -111,15 +111,20 @@ async def run_betting_bot():
         send_discord_notification("❌ **Failed to fetch odds!** Check API key or connection.")
         return
 
-    # Highly compressed task to save tokens
+    # Count specific matches and compress summary
+    matches_list = [m for m in odds_summary.split('\n') if m.strip()]
+    num_matches = len(matches_list)
     compact_summary = odds_summary.replace("Match: ", "").replace(" | Favorite to bet on: ", " -> ")
 
     task = (
-        "Login to http://flask-env.eba-txvdvhqt.us-west-2.elasticbeanstalk.com/ using these exact credentials: "
-        "Phone Number: 68467746 and Password: '  ' (two spaces). "
-        f"Matches: {compact_summary}. For each: find under 'Up Next', click row, "
-        "select specified team, submit, screenshot, back home."
+        "Login to http://flask-env.eba-txvdvhqt.us-west-2.elasticbeanstalk.com/ with "
+        "Phone: 68467746 and Password: '  ' (2 spaces). "
+        f"There are exactly {num_matches} match(es) to bet on today: {compact_summary}. "
+        "For each specific match listed: find it under 'Up Next', click the row, "
+        "select the team, submit, screenshot, and return Home. "
+        f"STOP immediately after completing these {num_matches} matches. Do NOT bet on future games."
     )
+
 
 
     browser = Browser(
