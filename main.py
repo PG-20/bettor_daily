@@ -122,7 +122,7 @@ async def run_betting_bot():
         "Phone: 68467746 and Password: '  ' (2 spaces). \n"
         f"Summary: {num_matches} match(es) to bet on today: {compact_summary}. "
         "For each match mentioned: find under 'Up Next', click the row, select team, and submit. return home"
-        f"If all {num_matches} matches in summary have been completed, STOP; otherwise continue."
+        f"STOP If {num_matches} matches mentioned in summary have been completed; otherwise continue."
     )
 
     browser = Browser(
